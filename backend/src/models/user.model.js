@@ -1,5 +1,6 @@
-import mongoose from 'mongoose';
+import mongoose, {Schema} from 'mongoose';
 import bcrypt from 'bcrypt';
+import jwt from "jsonwebtoken";
 
 const userSchema = mongoose.Schema(
     {
@@ -55,19 +56,19 @@ const userSchema = mongoose.Schema(
 
         },
 
-        refreshTokens: {
+        refreshToken: {
             type: String
         },
 
-        watchHistory: {
+        watchHistory:[ {
             type: Schema.Types.ObjectId,
             ref: "Videos"
-        }
+        }]
 
     }, { timestamps: true }
 );
 
-const User = mongoose.model("User", userSchema);
+
 
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
@@ -76,7 +77,7 @@ userSchema.pre("save", async function (next) {
         next();
     }
     catch (error) {
-        next(err);
+        next(error);
     }
 });
 
@@ -100,7 +101,7 @@ userSchema.methods.generateAccessToken = function () {
 
 
 userSchema.methods.generateRefreshTokens = function () {
-    jwt.sign({
+    return jwt.sign({
         _id: this.id,
     },
         process.env.REFRESH_TOKEN_SECRET,
@@ -110,5 +111,5 @@ userSchema.methods.generateRefreshTokens = function () {
     )
 }
 
-
+const User = mongoose.model("User", userSchema);
 export { User }
